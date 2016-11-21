@@ -1,0 +1,132 @@
+attribrules([join,_,_,T], To):- !, union(T,To).
+typerules([join,_,_, Ti], To):- allequal(Ti,To), relation(To), !.
+
+%TOO EXPERIMENTAL YET TO BE APPLIED
+%dynamicoperator([join,_,C]):- !, dynamicoperator(C).
+
+implrules([join,B,_,_], "SymetricHashJoin"):- isdynamic(B), !.
+implrules([join,_,_,_], "RelationalJoin", [{"keepDiff":"false", "lastState":"false"},{"keepDiff":"false", "lastState":"false"}]):- !.
+
+% Rule to allow cut branches iff the parameter semijoin="useless" is activated
+uselessSemiJoin(ArgPi, ArgJoin, Child):-
+    map_get(ArgJoin, "semijoin", "useless"),
+    map_get(ArgPi, "attributes", AttrPi),
+    getArgs(Child, ArgChild),
+    map_get(ArgChild, "attributes", Attr),
+    subset(AttrPi, Attr).
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [join,Arg2, [A,B]]
+    ]],
+    [pi, Arg1, [A]]
+):- uselessSemiJoin(Arg1, Arg2, A), !.
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [join,Arg2, [A,B]]
+    ]],
+    [pi, Arg1, [B]]
+):- uselessSemiJoin(Arg1, Arg2, B), !.
+
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [join,Arg2, [A,B]]
+    ]],
+    [pi, Arg1, [
+        [join, Arg3, D]
+    ]]
+):-
+    map_get(Arg1, "attributes", AttrPi),
+    map_get(Arg2, "conditionAttributes", [], AttrC),
+    getArgs(A, ArgA),
+    map_get(ArgA, "attributes", AttrA),
+    getArgs(B, ArgB),
+    map_get(ArgB, "attributes", AttrB),
+    intersection(AttrA, AttrB, AttrTmp),
+    union([AttrPi,AttrC,AttrTmp],Attr),
+    injectpi([A,B], Attr, Arg1, NumInject, D),
+    NumInject > 0,
+    !,
+    map_put(Arg2, ['attributes', Attr], Arg3).
+
+sugar([join,Arg,C], _ , [join,FinalArg,C]):-
+    map_get(Arg, "defaultOuter", DefaultOuter),
+    map_missing(Arg, "outer"),
+    map_put(Arg, ['outer', 'left'], FinalArg).
+
+sugar([join,Arg,C], _ , [sigma, {"condition": Cond}, [[join,FinalArg,C]]]):-
+    map_get(Arg, "condition", Cond), map_missing(Arg, "outer"),
+    remove(Arg, ["condition",Cond], FinalArg).
+
+% Still no outer !
+pushselectionrule([sigma, ArgSigma, [
+        [join, ArgJoin, [A,B]]
+    ]],
+    [sigma, ArgSigma, [
+        [join, ArgJoin, [A,B]]
+    ]]):- map_get(ArgJoin, "defaultOuter", O), !, 1=0.
+
+pushselectionrule(
+    [sigma, ArgSigma, [
+        [join, ArgJoin, [A,B]]
+    ]],
+    [join, ArgJoin, [
+        [sigma, ArgSigmaFinal, [A]], B
+    ]]
+):-
+    getArgs(A, ArgA),
+    map_get(ArgA, "attributes", AttrA),
+    getArgs(B, ArgB),
+    map_get(ArgB, "attributes", AttrB),
+    remove_all(AttrA, AttrB, AttrTmp),
+    map_get(ArgSigma, "conditionAttributes", AttrC),
+    subset(AttrC, AttrTmp), !,
+    map_put(ArgSigma, ["attributes", AttrA], ArgSigmaFinal).
+
+pushselectionrule(
+    [sigma, ArgSigma, [
+        [join, ArgJoin, [A,B]]
+    ]],
+    [join, ArgJoin, [
+        A, [sigma, ArgSigmaFinal, [B]]
+    ]]
+):-
+    getArgs(A, ArgA),
+    map_get(ArgA, "attributes", AttrA),
+    getArgs(B, ArgB),
+    map_get(ArgB, "attributes", AttrB),
+    remove_all(AttrB, AttrA, AttrTmp),
+    map_get(ArgSigma, "conditionAttributes", AttrC),
+    subset(AttrC, AttrTmp), !,
+    map_put(ArgSigma, ["attributes", AttrB], ArgSigmaFinal).
+
+pushselectionrule(
+    [sigma, ArgSigma, [
+        [join, ArgJoin, [A,B]]
+    ]],
+    [join, ArgJoinFinal, [
+        A, B
+    ]]
+):- !,
+    map_get(ArgJoin, "condition", "true", JoinCond),
+    map_get(ArgJoin, "conditionAttributes", [], JoinCondAttr),
+    map_get(ArgSigma, "condition", SigmaCond),
+    map_get(ArgSigma, "conditionAttributes", SigmaCondAttr),
+    union([JoinCondAttr, SigmaCondAttr], CondAttr),
+    concat(['(', SigmaCond, ') && (', JoinCond, ')'], Cond),
+    map_put(ArgJoin, ["condition", Cond], ArgTmp),
+    map_put(ArgTmp, ["conditionAttributes", CondAttr], ArgJoinFinal).
+
+% Su-sucre !
+% A \Join_d B
+% 	\sigma_d (A \Join B)
+%
+% \sigma_c (A \Join_d B)
+%  	Si Attr(c) \subset Attr(A) \ Attr(B)
+%  		(\sigma_c(A)) \Join_d B
+%  	Si Attr(c) \subset Attr(B) \ Attr(A)
+%  		A \Join_d (\sigma_c(B))
+%  	Sinon
+%  		A \Join_{c && d} B

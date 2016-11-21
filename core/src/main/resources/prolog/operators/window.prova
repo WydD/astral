@@ -1,0 +1,95 @@
+typerules([window,_,_, [Ti]], To):- stream(Ti), !, relation(To).
+
+attribrules([window,_,_, [T]], T):- !.
+
+implrules([window,{description: [D], partitionedBy: Z},_,_], "LastBatchPartitionedWindow"):-
+    lastbatchorlasttuple(D), !.
+implrules([window,{"partitionedBy": Z},_,_], "PartitionedWindow"):- !.
+implrules([window,{description: [D]},_,_], "LastBatchWindow"):-
+    lastbatchorlasttuple(D), !.
+implrules([window,_,_,_], "WindowImpl"):- !.
+
+
+descriptionsugar(window, {"type": "L"}, {a:"1", b:"0", c:"1", d: "0", rate: "1", "type":"P"}):- !.
+descriptionsugar(window, {"type": "unbounded"}, {a:"0", b:"0", c:"1", d: "0", rate: "1", "type":"P"}):- !.
+
+descriptionsugar(window, Desc, DescOut):-
+    map_get(Desc, "type", "T"),
+    map_get(Desc, "at", "t0", "t0"), !,
+    map_put(Desc, ["at", "-1"], DescOut).
+
+descriptionsugar(window, Desc, DescOut):- slidingwindowsugar("T", "range", Desc, DescOut), !.
+descriptionsugar(window, Desc, DescOut):- slidingwindowsugar("P", "rows", Desc, DescOut), !.
+
+slidingwindowsugar(Type, Attribute, Desc, DescOut):-
+    map_get(Desc, "type", Type),
+    map_get(Desc, Attribute, Range),
+    map_get(Desc, "slide", Slide),!,
+    RangeInt=java.lang.Integer.parseInt(Range),
+    Shift=0-RangeInt,
+    concat([Shift],B),
+    map_get(Desc, "boundaries", "]]", Bounds),
+    map_put({"a": Slide, "at": "t0", "b": Shift, "c":Slide, "d": "0", "rate":Slide, "width": Range, "type": Type}, ['b',B], DescTmp),
+    map_put(DescTmp, ["boundaries", Bounds], DescOut).
+
+descriptionsugar(window, Desc, DescOut):-
+    map_get(Desc, "wtype", Type), !,
+    map_remove([Desc, "wtype"], Desc1),
+    map_put(Desc1, ["type", Type], DescOut).
+
+sugar([window, B, C], _, [window, BOut, C]):-
+    map_get(B, "description", [D]),
+    map_get(D, "boundaries", Bounds),
+    map_missing(B, "boundaries"), !,
+    map_put(B, ["boundaries", Bounds], BOut).
+
+
+descriptionimpl(window, "T", "LinearTemporalDescription"):- !.
+descriptionimpl(window, "P", "LinearPositionalDescription"):- !.
+descriptionimpl(window, "B", "BatchWindowDescription"):- !.
+
+lastbatchorlasttuple(Desc):-
+    isPositionalWindow(Desc, "1"), !.
+lastbatchorlasttuple(Desc):-
+    map_get(Desc, "type", "B").
+
+isPositionalWindow({a: A, b:"0", c:"1", d: "0", rate: "1", "type":"P"}, A).
+
+dynamicoperator([window,_,_]):- !.
+
+parsenode([window,B,C],_, [window,Bc,C]):-
+    tokenizeparameter(B, 'partitionedBy', ',', Bc), !.
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [window,Arg2,[C]]
+    ]],
+    [pi, Arg1, [
+        [window, Arg3, [
+            [pi, Arg4, [C]]
+        ]]
+    ]]
+):-
+    map_get(Arg1, "attributes", AttrA),
+    distinct(["T"|AttrA], Attr),
+    necessarypi(C, Attr), !,
+    map_put(Arg2, ['attributes', Attr], Arg3),
+    stream(SType),
+    map_put(Arg1, ['type', SType], Arg4Tmp),
+    map_put(Arg4Tmp, ['attributes', Attr], Arg4).
+
+pushselectionrule(
+    [sigma, Arg1, [
+        [window,Arg2, [C]]
+    ]],
+    [window, Arg2, [
+        [sigma, Arg1, [C]]
+    ]]
+):-
+    % valid for types
+    map_get(Arg2, "description", [Desc]),
+    isPushableWindowSelection(Desc), !.
+
+isPushableWindowSelection({"type": "T"}):- !.
+isPushableWindowSelection(Desc):-
+    isPositionalWindow(Desc, "0"), !.

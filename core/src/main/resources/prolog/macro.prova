@@ -1,0 +1,18 @@
+macrosource(A):- macroimpl([A,_,[]],_).
+
+macrobuilding(M, Z):-
+    macrobuilding(M, Z, X).
+
+macrobuilding(M, Z, 1):-
+    macrogroup(M, T), !,
+    macrobuilding(T, Z, X).
+macrobuilding([A,B,C], M, 1):-
+    macrobuildinglist(C, C1, 1), !,
+    macrobuilding([A,B,C1], M, Z).
+macrobuilding(M, M, 0) :- !.
+
+macrobuildinglist([[A,B,C]|Y], [Z|Zy], O):-
+    macrobuilding([A,B,C], Z, X),
+    macrobuildinglist(Y, Zy, Zx),
+    max(X,Zx,O).
+macrobuildinglist([],[],0).

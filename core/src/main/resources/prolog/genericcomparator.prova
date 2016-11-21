@@ -1,0 +1,21 @@
+equ([],[]).
+equ([X],[Y]):- equ(X,Y), !.
+equ([X|Y],[A|B]):- equ(X,A), equ(Y,B), !.
+equ(A,A):- !.
+
+diff(X,Y):- length(X,Lx), length(Y,Ly), Lx != Ly, !.
+diff([X],[Y]):- diff(X,Y), !.
+diff([X|Y],[A|B]):- diff(X,A), !.
+diff([X|Y],[A|B]):- diff(Y,B), !.
+diff(A,B):- A!=B, !.
+
+allequaleval([A],A,A):- !.
+allequaleval([A|C],A,Z):-
+	allequal(C,A,Z), !.
+allequal([A],A).
+allequal([A|C],Z):- allequaleval(C,A,Z).
+
+isdifferent([X,E],X):- diff(X,E), !.
+
+max(X,Y,X):- X>Y, !.
+max(Y,X,X):- !.

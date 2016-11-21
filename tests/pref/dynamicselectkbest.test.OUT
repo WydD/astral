@@ -1,0 +1,25 @@
+DIRECTOR,YEARS,GENRE,ACTOR,TITLE
+t=1
+James Cameron,90,drama,Bill Paxton,Titanic
+t=2
+James Cameron,90,drama,Bill Paxton,Titanic
+Woody Allen,80,drama,Charlotte Rampling,Stardust Memories
+t=3
+James Cameron,90,drama,Bill Paxton,Titanic
+Woody Allen,80,drama,Charlotte Rampling,Stardust Memories
+Woody Allen,80,drama,Mia Farrow,New York Stories
+t=4
+James Cameron,90,drama,Bill Paxton,Titanic
+Woody Allen,80,drama,Charlotte Rampling,Stardust Memories
+Woody Allen,80,drama,Mia Farrow,New York Stories
+Woody Allen,80,comedy,Mia Farrow,A Midsummer Night’s Sex Comedy
+t=5
+James Cameron,90,drama,Bill Paxton,Titanic
+Joel Coen,80,comedy,Louise Lasser,Crimewave
+Woody Allen,80,drama,Charlotte Rampling,Stardust Memories
+Woody Allen,80,drama,Mia Farrow,New York Stories
+t=6
+Woody Allen,80,drama,Charlotte Rampling,Stardust Memories
+Joel Coen,80,comedy,Louise Lasser,Crimewave
+James Cameron,0,action,Zoe Saldana,Avatar
+Woody Allen,80,drama,Mia Farrow,New York Stories

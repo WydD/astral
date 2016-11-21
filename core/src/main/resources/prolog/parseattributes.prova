@@ -1,0 +1,14 @@
+
+tokenizeparameter(P, Param, Sep, Z):-
+	map_get(P, Param, T),
+	type(T, "java.lang.String"), !,
+	tokenize_list([T,Sep],L),
+	map_put(P, [Param,L], Z).
+
+%tokenizeparameter(P, Param, Sep, P):- !.
+
+parseattributes([A,B,C],[A,Bl,Cx]) :- !,
+	tokenizeparameter(B, 'attributes', ',', Bl),
+	list_derive([parseattributes,C,Cx]).
+
+

@@ -1,0 +1,63 @@
+<!--
+  ~ Copyright 2012 LIG SIGMA
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head>
+    <title>fr.lig.sigma.astral package</title>
+</head>
+<body bgcolor="white">
+Provides the basic tools to create, use or delete the Astral engine. At first glance, this simple bundle has only
+a large set of interface and some very basic classes. The implementations are provided inside the core package. When
+developing an astral application, you do not need to requires the core.
+
+<h3>Access to the engine</h3>
+The astral engine has been built under <a href="http://felix.apache.org/site/apache-felix-ipojo.html">OSGi-iPOJO</a>.
+When the api and the core bundles are deployed inside an OSGi container (like
+<a href="http://felix.apache.org/">felix</a>). You can access to the engine via a requirement of services from iPOJO.
+<pre>
+    public class Foo {
+        &#64;Requires
+        private AstralEngine astral;
+    }
+</pre>
+Then the framework will find the only implementation that matches this interface. Now you can access to all the methods
+provided by the engine, notably the core creation.
+
+<h3>Create a core</h3>
+A core in the sense of astral is a complete toolset to create, modify, run and delete a single query. Each core is
+unique and can accept only one query. The engine provide a direct method to create a new core. Starting from this part,
+the user can build a new query by hand with the {@link fr.lig.sigma.astral.operators.OperatorFactory} et all source
+managers available. An engine can contain multiple cores indeed.
+
+<h3>Run a query</h3>
+Once the {@link fr.lig.sigma.astral.common.structure.Entity} is built, the user must register it inside the engine. When
+it's done, the user has a {@link fr.lig.sigma.astral.query.QueryRuntime} to control the cycle of life of the query. By
+doing a start, the engine launch an execution thread.
+
+<h3>What the engine does NOT do</h3>
+The engine itself does not provide :
+<ul>
+    <li>A query builder that transforms a string to an {@link fr.lig.sigma.astral.common.structure.Entity}</li>
+    <li>A distributed execution of the query</li>
+    <li>Any GUI</li>
+    <li>Any real source mapping. As each source has their specific behaviour, only very basic sources are implemented
+    as demonstration. </li>
+</ul>
+
+Fortunately, other bundles of the AStrAL distribution does provide those functionality.
+</body>
+</html>

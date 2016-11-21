@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+<query t0="auto">
+<join>
+<source attributes="temp2,PHYID,T2" id="R_2" sourceAttributes="temp2,PHYID,T2" type="Relation"/>
+<source attributes="id,T,PHYID,temp" id="R_1" sourceAttributes="id,T,PHYID,temp" type="Relation"/>
+</join>
+</query>
+<sources>
+<source attributes="temp2,PHYID,T2" file="tests/wiki/Cartesian_product/R_2.R" id="R_2" impl="FileRelationImpl" type="Relation"/>
+<source attributes="id,T,PHYID,temp" file="tests/wiki/Cartesian_product/R_1.R" id="R_1" impl="FileRelationImpl" type="Relation"/>
+</sources>
+</astral>

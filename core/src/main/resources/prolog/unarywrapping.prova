@@ -1,0 +1,35 @@
+unarywrapping([A,B,[[Ca,Cb,C]]],[unary,FinalUnaryProp,Cc]):-
+	unaryimpl(A,B,Impl),
+	unaryimpl(Ca,Cb,I), !,
+	unarywrapping([Ca,Cb,C],[unary,UB,Cc]),
+	map_get(UB, "operations", Zo),
+	transmitCommonProperties(B, Cb, Bunary),
+	concat([A], As),
+	map_replace([B, {'otype':As, 'impl':Impl}], Bz),
+	map_put(Bunary, ['operations', [Bz|Zo]], FinalUnaryProp).
+
+unarywrapping([A,B,[C]],[unary, FinalUnaryProp,[Cc]]):-
+	unaryimpl(A,B,Impl), !,
+	unarywrapping(C,Cc),
+	concat([A], As),
+	transmitCommonProperties(B, Bunary),
+	map_replace([B, {'otype':As, 'impl':Impl}], Bz),
+	map_put(Bunary, ['operations', [Bz]], FinalUnaryProp).
+
+unarywrapping([A,B,C],[A,B,Cc]):-
+	!,
+	list_derive([unarywrapping, C, Cc]).
+	%println([A,C,Cc]).
+
+transmitCommonProperties(Bo, Cb, B):-
+    map_get(Cb, 'rid', RId), !,
+    transmitCommonProperties(Bo, Tmp),
+    map_put(Tmp, ['rid', RId], B).
+transmitCommonProperties(Bo, Cb, B):- !,
+    transmitCommonProperties(Bo, B).
+transmitCommonProperties(Bo, B):-
+	map_get(Bo, 'type', Zt),
+	map_get(Bo, 'attributes',Za),
+	addRIdValueIfNecessary(Bo, {'type':Zt, 'attributes': Za}, B).
+addRIdValueIfNecessary(Bo, R, Result):- map_get(Bo, 'rid', RId), !, map_put(R, ['rid',RId], Result).
+addRIdValueIfNecessary(Bo, R, R):- !.

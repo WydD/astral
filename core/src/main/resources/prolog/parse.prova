@@ -1,0 +1,31 @@
+parsenode([A,B,C],_, [A,Bc,C]):-
+    tokenizeparameter(B, 'attributes', ',', Bc), !.
+
+parsenode([A,B,C],Core, [A,Bc,C]):-
+    map_get(B, 'condition', Cond),
+    map_missing(B,'conditionAttributes'), !,
+    getexpressionattributes(Cond, Core, Attr),
+    map_put(B, ['conditionAttributes', Attr], Bc).
+
+parsenode([A,B,C],Core, [A,Bc,C]):-
+    map_get(B, 'expression', Cond),
+    map_missing(B,'expressionAttributes'), !,
+    getexpressionattributes(Cond, Core, Attr),
+    map_put(B, ['expressionAttributes', Attr], Bc).
+
+getexpressionattributes(Expr, Core, List) :-
+    Engine=Core.getEngine(),
+    EA=Engine.getGlobalEA(),
+    ArgSet=EA.getArguments(Expr),
+    java2prova(ArgSet, List).
+
+% Trick... as the Set<String> is not recognized, we parse the toString
+java2prova(JavaList, []):-
+    N=JavaList.size(),
+    N=0, !.
+java2prova(JavaList, ProvaList):-
+    concat([JavaList],ArgStrList),
+    ArgStrListClean=ArgStrList.replaceAll("[ \[\]]",""),
+    tokenize_list([ArgStrListClean, ','], ProvaList).
+
+sugar(X,C,Y):- parsenode(X,C,Y).

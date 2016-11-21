@@ -1,0 +1,36 @@
+attribrules([pi,{removeAttributes: R},_,[T]], To):- !, remove_all(T, R, To).
+attribrules([pi,{attributes: To},_,_], To):- !.
+
+unaryimpl(pi,_, "PiRelationalOperation").
+
+parsenode([pi,B,C],_, [pi,Bc,C]):-
+    tokenizeparameter(B, 'removeAttributes', ',', Bc), !.
+
+pushprojectionrule(
+    [pi, {attributes: Attr}, [
+        [Ca,Cb,Cc]
+    ]],
+    [Ca,Cb,Cc]
+):-
+    map_get(Cb, 'attributes', AttrC),
+    list_equivalent(Attr,AttrC).
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [pi,Arg2,C]
+    ]],
+    [pi,Arg1,C]
+).
+
+% \Pi_a \sigma_c E \Pi_{a} \sigma_c \Pi_{a\cup attr(c)} E
+%pushselectionrule(
+%    [sigma, SigmaArg, [
+%        [pi,PiArg,Cc]
+%    ]],
+%    [sigma, SigmaArg, [
+%        [pi,PiArg,Cc]
+%    ]]
+%):-
+%    map_get(B, 'attributes', Attr),
+%    map_get(Cb, 'attributes', AttrC),
+%    equivalentlist(Attr,AttrC).

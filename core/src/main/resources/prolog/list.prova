@@ -1,0 +1,80 @@
+
+attach_all(A,B):- attach_all(A,[],B).
+attach_all([],Acc,Acc) .
+attach_all([[]|Y],Acc,Res) :- attach_all(Y,Acc,Res).
+attach_all([[X|Z]|Y],Acc,Res) :- attach_all([Z|Y],[X|Acc],Res).
+
+remove([],E,[]).
+remove([A|X],E,Z):- equ(A,E), !, remove(X,E,Z).
+remove([A|X],E,[A|Z]):- !, remove(X,E,Z).
+
+remove_all(L,[X|Y],Res) :- !, remove(L,X,Tmp), remove_all(Tmp,Y,Res).
+remove_all(L,[],L) :- !.
+
+distinct([],[]).
+distinct([H|T],C) :- element(H,T),!, distinct(T,C).
+distinct([H|T],[H|C]) :- distinct(T,C).
+
+union(X,R) :-
+    attach_all(X,D),
+    distinct(D,R).
+
+subset([],_).
+subset([H|T],L):-
+    element(H,L), !,
+    subset(T,L).
+
+intersection([X|Y],M,[X|Z]) :- element(X,M), !, intersection(Y,M,Z).
+intersection([X|Y],M,Z) :- intersection(Y,M,Z).
+intersection([],M,[]).
+
+intersection_all([X|Y],Z):- intersection_all(Y,X,Z).
+intersection_all([],M,M).
+intersection_all([X|Y],M,Z):- intersection(X,M,R), intersection_all(Y,R,Z).
+
+not_element(E,L):- element(E,L), !, 1=0.
+not_element(E,L).
+
+list_equivalent(L1,L2):-
+    length(L1, AttrSize),
+    length(L2,AttrSize),
+    remove_all(L1, L2, Z),
+    length(Z, 0).
+
+list_different(L1,L2):-
+    length(L1, AttrSize),
+    length(L2,AttrSize2),
+    AttrSize != AttrSize2, !.
+
+list_different(L1,L2):- !,
+    remove_all(L1, L2, Z),
+    length(Z, L),
+    L > 0.
+
+is_list(L):- type(L, "ws.prova.reference2.ProvaListImpl"), !.
+is_list(L):- type(L, "ws.prova.kernel2.ProvaList").
+
+% list_derive([List,Rule,Arg1,Arg2...],Out).
+list_derive([RulePipeLine, [], []]):- !.
+list_derive([RulePipeLine, [Elt|List], [DerivedElt | DerivedList]]):-
+    list_derive([RulePipeLine, List, DerivedList]),
+    derive([RulePipeLine,Elt,DerivedElt]).
+
+list_derive_transposed([RulePipeLine, List, TransposedList]):-
+    list_derive([RulePipeLine, List, DerivedList]),
+    matrix_transpose(DerivedList, TransposedList).
+
+list_wrap(X, [X]).
+
+matrix_transpose([], []):- !.
+matrix_transpose([F|Fs], Ts) :-
+    matrix_transpose(F, [F|Fs], Ts).
+
+matrix_transpose([], _, []):- !.
+matrix_transpose([_|Rs], Ms, [Ts|Tss]) :-
+        lists_firsts_rests(Ms, Ts, Ms1),
+        matrix_transpose(Rs, Ms1, Tss).
+
+lists_firsts_rests([], [], []):- !.
+lists_firsts_rests([[F|Os]|Rest], [F|Fs], [Os|Oss]) :-
+        lists_firsts_rests(Rest, Fs, Oss).

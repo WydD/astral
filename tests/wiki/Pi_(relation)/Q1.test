@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+<query t0="auto">
+<pi attributes="id,temp">
+<source attributes="id,T,PHYID,temp" id="R" sourceAttributes="id,T,PHYID,temp" type="Relation"/>
+</pi>
+</query>
+<sources>
+<source attributes="id,T,PHYID,temp" file="tests/wiki/Pi_(relation)/R.R" id="R" impl="FileRelationImpl" type="Relation"/>
+</sources>
+</astral>

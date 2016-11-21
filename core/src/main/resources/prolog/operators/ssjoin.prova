@@ -1,0 +1,7 @@
+sugar([ssjoin, B, [[A1,B1,C1],C2]],_,
+    [join, B, [
+        [A1,Bz,C1],
+        [domain, {"dtype": "depends", "dependentRId": UUID}, [C2]]
+    ]]):- !,
+ 	UUID=java.util.UUID.randomUUID(),
+    map_put(B1, ["rid",UUID], Bz).

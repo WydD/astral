@@ -1,0 +1,33 @@
+relation("Relation").
+stream("Stream").
+
+typecompute([T,X],Z):- !,
+	applyrule([typerules,'type',X],[Z,T]).
+attribcompute([T,X],Z):- !,
+	%parseattributes([X,[]],Xa),
+	applyrule([attribrules,'attributes',X],[Z,T]).
+implapply(X,Z):- !,
+    setdynamicimplementations(X,Xz),
+	implcompute(Xz,Z).
+
+print_debug([S,X],X):-
+    println([S]).
+
+infertree(TreeOriginal,Core,Z,[T1,T2]):- !,
+    derive([[
+        list_wrap, print_debug("Computing query plan..."),
+        list_wrap, syntacticsugar(Core),
+        list_wrap, print_debug("Syntactic sugars applied"),
+        list_wrap, typecompute(T1),
+        list_wrap, print_debug("Types computed"),
+        list_wrap, attribcompute(T2),
+	    list_wrap, print_debug("Type and attributes computed"),
+                   optimize,
+	    list_wrap, print_debug("Tree optimized"),
+                   macrobuilding,
+	    list_wrap, print_debug("Macro groups replaced"),
+                   unarywrapping,
+	    list_wrap, print_debug("Unary operators wrapped"),
+                   implapply,
+	    list_wrap, print_debug("Implementation chosen")
+    ], TreeOriginal, Z]).

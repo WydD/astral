@@ -1,0 +1,30 @@
+implrules([source,_,_,_],""):- !.
+implrules([A,B,C,_], Z):- macroimpl([A,B,C],Z), !.
+implrules(Z,R,[]):- implrules(Z,R).
+
+implrules([A,B,_,_], "Unknown") :- !,
+	println(["[ERROR] Unknown implementation rule for",A,B]," "), 1=0.
+
+implcomputeList([],[]).
+implcomputeList([[A,B,C]|T], [H|T2]):-
+    implcomputeList(T,T2),
+    implcompute([A,B,C],H).
+
+getlooseheadtail([], D, D, []).
+getlooseheadtail([H|T], D, H, T).
+
+applyImplProperties([], _, []).
+applyImplProperties([[A,B,C]|T], Props, [[A,BOut,C]|T2]):-
+    getlooseheadtail(Props, {}, Prop, TProps),
+    map_put(B, ["structure", Prop], BOut),
+    applyImplProperties(T, TProps, T2).
+
+implcompute([A,B,C], [A,B,C]):-
+    map_get(B, "impl", D), !.
+
+implcompute([A,B,C], [A,BOut,COut]):-
+    implcomputeList(C,CTmp),
+    implrules([A,B,CTmp,""],Impl,Properties),!,
+    map_put(B, ["impl", Impl], B2),
+    map_put(B2, ["structure", {}], BOut),
+    applyImplProperties(CTmp, Properties, COut).

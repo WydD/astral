@@ -1,0 +1,49 @@
+<!--
+  ~ Copyright 2012 LIG SIGMA
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>fr.lig.sigma.operators package</title>
+</head>
+<body>
+Base of all operators implementation considering the definitions of AStrAL. As a reminder, the operator definitions can
+be found <a href="http://loic.doesntexist.com/mediawiki/index.php/Main_Page">here</a>.
+
+This package gives the minimum framework to write quickly any type of operators. With the abstract classes like
+{@link fr.lig.sigma.astral.operators.RelationOperator} or {@link fr.lig.sigma.astral.operators.StreamOperator},
+implementing an operator can be nearly reduced to it's core algorithm.
+
+<h3>Common rules to define an operator</h3>
+Each operator, are classes that implements the interface {@link fr.lig.sigma.astral.operators.Operator} as well as their
+right output entity type. An interface must be defined for that, like {@link fr.lig.sigma.astral.operators.pi.Pi} for
+example with an unique function that will initialize the operator with its input and parameters.
+
+The implementation must follow very simple rules to define a good operators.
+<ul>
+    <li>Extends on of the two abstract operators that extends {@link fr.lig.sigma.astral.common.structure.EntityContainer}</li>
+    <li>Do a setOutput as soon as enough details about the attributes and names are gathered</li>
+    <li>Then only, do a addInput to indicate to the scheduler the dependencies of the operator, and if it is the case,
+    to be registered as an input listener.</li>
+    <li>Implement your algorithm inside the processEvent of {@link fr.lig.sigma.astral.common.event.EventProcessor}</li>
+</ul>
+
+If your operator is a composite and needs to create other operators, just extends the interface with
+{@link fr.lig.sigma.astral.operators.OperatorFactory}. The core will detect it at the instanciation and will attach the
+right one to this component.
+</body>
+</html>

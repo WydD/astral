@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+<query t0="auto">
+<streamjoin band="10">
+<source attributes="id,T,PHYID,temp" id="S1" sourceAttributes="id,T,PHYID,temp" type="Stream"/>
+<source attributes="id,T,temp2,PHYID" id="S2" sourceAttributes="id,T,temp2,PHYID" type="Stream"/>
+</streamjoin>
+</query>
+<sources>
+<source attributes="id,T,PHYID,temp" file="tests/join/streamjoin.S1" id="S1" impl="FileStreamImpl" type="Stream"/>
+<source attributes="id,T,temp2,PHYID" file="tests/join/streamjoin.S2" id="S2" impl="FileStreamImpl" type="Stream"/>
+</sources>
+</astral>

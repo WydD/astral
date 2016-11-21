@@ -1,0 +1,7 @@
+
+% Type rules !
+typerules([A,_,_,[T]], T):- unaryimpl(A,B,C), !.
+
+typerules([A, B, C, X], C):- !,
+	println(["[ERROR] [Type inference] Unknown operator: ",A,B,X]), 1=0.
+

@@ -1,0 +1,31 @@
+getArgs([A,B,C], B).
+
+injectpi([],_,_,0,[]).
+injectpi([[A,B,C]|X], Attr, Arg, NewNumInject, [[pi, ArgFinal, [[A,B,C]]]|L]):-
+    map_get(B, "attributes", Bc),
+    intersection(Attr, Bc, AttrFinal),
+    list_different(Bc, AttrFinal), !,
+    map_remove(Arg, 'rid', ArgWoRID),
+    map_put(ArgWoRID, ['attributes', AttrFinal], ArgFinal),
+    injectpi(X, Attr, Arg, NumInject, L),
+    NewNumInject=NumInject+1.
+injectpi([E|X], Attr, Arg, NumInject, [E|L]):- !,
+    injectpi(X, Attr, Arg, NumInject, L).
+
+
+necessarypi([A,B,C], Attr):-
+    map_get(B, 'attributes', ChildAttr),
+    list_different(Attr, ChildAttr).
+
+pushprojection(X,R,[A,B,Cs]):-
+    tryoptimizerule(X,R,[A,B,C]),
+    pushprojectionlist(C,R,Cs). % Iterate while there is stuff to do
+
+tryoptimizerule(X,0,Z):- pushprojectionrule(X,Tmp), !, tryoptimizerule(Tmp,0,Z).
+tryoptimizerule(X,1,Z):- pushselectionrule(X,Tmp), !, tryoptimizerule(Tmp,1,Z).
+tryoptimizerule(X,_,X) :- !.
+
+pushprojectionlist([],R, []):- !.
+pushprojectionlist([[A,B,C]|Xs],R, [Z|Acc]):- !,
+    pushprojection([A,B,C],R, Z),
+    pushprojectionlist(Xs,R,Acc).

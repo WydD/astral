@@ -1,0 +1,24 @@
+
+%sugar([A,B,C], [A,B,C]):- !.
+
+
+sugar([A,B,C],_, [A,Bc,C]):-
+    map_get(B, "description", [Desc]),
+    map_get(Desc, "type", Type),
+    map_missing(Desc, "impl"),
+    descriptionimpl(A,Type,Impl), !,
+    map_put(Desc, ["impl", Impl], DescWithImpl),
+    map_put(B, ["description", [DescWithImpl]], Bc).
+
+syntacticsugar([Core,X], [A,B,Cs]):-
+    trysugar(X,Core, [A,B,C]),
+    list_derive([[list_wrap,syntacticsugar(Core)], C, Cs]).
+
+sugar([A, B, C],_,[A, Bc, C]):-
+    map_get(B, "description", [Desc]),
+    descriptionsugar(A, Desc, DescB), !,
+    map_put(B, ["description", [DescB]], Bc).
+
+trysugar(X,C,Z):- sugar(X,C,Tmp), !, trysugar(Tmp,C,Z).
+trysugar(X,_,X):- !.%, println([X]).
+

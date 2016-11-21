@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+	<query>
+		<sigma condition="value != oldvalue">
+			<join defaultOuter="0" outer="full">
+				<source id="R"/>
+				<domain dtype="previous">
+					<rho>
+						<rename from="value" to="oldvalue"/>
+						<source id="R"/>
+					</rho>
+				</domain>
+			</join>
+		</sigma>
+	</query>
+	<sources>
+		<source file="tests/join/diff.R" id="R" impl="FileRelationImpl"/>
+	</sources>
+</astral>

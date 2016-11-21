@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+	<query t0="auto">
+		<selectbest>
+			<preference preferred="YEARS==90" over="YEARS=80" ignored="TITLE,DIRECTOR,ACTOR"/>
+			<preference condition="DIRECTOR=='Woody Allen'" preferred="ACTOR=='Charlotte Rampling'" over="ACTOR=='Mia Farrow'" ignored="TITLE"/>
+			<preference condition="GENRE=='comedy' &amp;&amp; YEARS==80" preferred="DIRECTOR=='Joel Coen'" over="DIRECTOR=='Woody Allen'" ignored="TITLE,ACTOR"/>
+			<preference condition="YEARS==80" preferred="GENRE=='drama'" over="GENRE=='comedy'" ignored="TITLE"/>
+			<source id="R"/>
+		</selectbest>
+	</query>
+	<sources>
+		<source file="tests/pref/R.R" id="R" impl="FileRelationImpl"/>
+	</sources>
+</astral>

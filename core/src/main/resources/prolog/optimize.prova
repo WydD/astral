@@ -1,0 +1,24 @@
+optimize(X,Z):-
+    prepareoptimize(X,Tmp),
+    pushprojection(Tmp,0,Tmp2),
+    pushprojection(Tmp2,1,Z).
+
+prepareoptimize(X,X).
+
+dynamicoperator([]).
+dynamicoperator([[A,B,C]|Y]):- !,
+    dynamicoperator([A,B,C]), dynamicoperator(Y).
+
+setdynamicimplementations([], []):- !.
+setdynamicimplementations([[A,B,C]|Y], [Z|Yz]):- !,
+    setdynamicimplementations([A,B,C], Z),
+    setdynamicimplementations(Y, Yz).
+setdynamicimplementations([A,B,C], [A,Bc,Cc]):-
+    dynamicoperator([A,B,C]), !,
+    map_put(B, ["dynamic", 1], Bc),
+    setdynamicimplementations(C,Cc).
+setdynamicimplementations([A,B,C], [A,B,Cc]):- !,
+    setdynamicimplementations(C,Cc).
+
+isdynamic(B):- map_get(B, "dynamic", 1).
+dynamicnode([A,B,C]):- isdynamic(B).

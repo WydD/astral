@@ -1,0 +1,10 @@
+DIRECTOR,YEARS,GENRE,ACTOR,TITLE
+t=1
+James Cameron,90,drama,Bill Paxton,Titanic
+t=5
+James Cameron,90,drama,Bill Paxton,Titanic
+Joel Coen,80,comedy,Louise Lasser,Crimewave
+t=6
+James Cameron,90,drama,Bill Paxton,Titanic
+Joel Coen,80,comedy,Louise Lasser,Crimewave
+James Cameron,0,action,Zoe Saldana,Avatar

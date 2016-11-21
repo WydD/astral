@@ -1,0 +1,4 @@
+% Attribute rules !
+attribrules([A,B,C,X],C) :- !,
+	println(["[ERROR] [Attribute inference] Unknown operator: ",A,B,X]), 1=0.
+

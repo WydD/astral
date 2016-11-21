@@ -1,0 +1,3 @@
+register S1 FileStream(S.S)
+set output network 5000
+prepare S1

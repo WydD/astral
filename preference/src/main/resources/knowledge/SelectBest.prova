@@ -1,0 +1,9 @@
+sugar([selectbest,B,C],_,[selectkbest,Bz,C]):- map_put(B,['k',-1],Bz), !.
+
+typerules([selectkbest,_,_,[T]],T):- relation(T), !.
+attribrules([selectkbest,_,_,[T]], T):- !.
+
+implrules([selectkbest,Pref,[[A,B,C]],_], "DynamicSelectKBest"):-
+    map_get(B, "incremental", "true", "true"),
+    isdynamic(B), !.
+implrules([selectkbest,_,_,_], "SelectKBest"):- !.

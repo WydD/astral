@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+<query t0="auto">
+<sigma condition="temp&gt;=30">
+<source attributes="id,T,PHYID,temp" id="R" sourceAttributes="id,T,PHYID,temp" type="Relation"/>
+</sigma>
+</query>
+<sources>
+<source attributes="id,T,PHYID,temp" file="tests/wiki/Sigma_(relation)/R.R" id="R" impl="FileRelationImpl" type="Relation"/>
+</sources>
+</astral>

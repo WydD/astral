@@ -1,0 +1,22 @@
+% Apply a rule on a node
+% 1/ The node
+% 2/ The rule
+% 3/ The property to modify
+applyrule([Rule,Attribute,[A,B,C]],[[A,B,Cc],NodeValue]) :-
+	map_get(B, Attribute, NodeValue),
+	!,
+	applyrule_to_list(Rule,Attribute,C,[Cc,ChildrenValues]).
+
+applyrule([Rule,Attribute,[A,B,C]],[[A,Bc,Cc],NodeValue]) :-
+    !,
+	applyrule_to_list(Rule,Attribute,C,[Cc,ChildrenValues]),
+	derive([[Rule(A,B,C)],[ChildrenValues],NodeValue]),
+	map_put(B, [Attribute, NodeValue], Bc).
+
+applyrule_to_list(_,_,[],[[],[]]):- !.
+applyrule_to_list(Rule, Attribute, C, Transposed):-
+	list_derive_transposed([
+	    [list_wrap,applyrule(Rule,Attribute)],
+	    C,
+	    Transposed
+	]).

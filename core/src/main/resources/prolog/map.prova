@@ -1,0 +1,32 @@
+% Map usage predicates
+map_get(Map, Key, Value):- Value=Map.get(Key).
+map_get(Map, Key, Default, FinalValue):- map_get(Map, Key, Value), !, FinalValue=Value.
+map_get(Map, Key, Default, Default).
+
+map_missing(Map, Key):- Map.containsKey(Key), !, 1=0.
+map_missing(Map, Key).
+
+map_match(Map, Matching):-
+    map_merge([Map, Matching], Map).
+
+map_remove([Map, Key], NewMap):-
+    map_merge([Map, {}], NewMap),
+    NewMap.remove(Key).
+
+map_replace([Map1, Map2], Map1Clone):-
+    map_merge([Map1, {}], Map1Clone),
+    Map1Clone.putAll(Map2).
+
+is_map(A):- type(A,"java.util.HashMap").
+
+map_put(Map, [Key,Value], NewMap):-
+    map_remove([Map, Key], Map2),
+    map_merge([Map2, [Key], [Value]], NewMap).
+    %map_replace([Map,ToReplace], NewMap).
+
+% Get the list of attributes from a list of maps
+% 1/ The list of maps 2/ The attribute 3/ The output
+maplist_get([], A, []).
+maplist_get([M|X], A, [V|L]) :-
+    map_get(M, A, V),
+    maplist_get(X,A,L).

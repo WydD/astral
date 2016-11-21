@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+	<query>
+        <streamer stype="Rsu">
+            <sigma condition="value == 'null' || oldvalue == 'null'">
+                <join defaultOuter="null" outer="full" condition="value==oldvalue">
+                    <pi removeAttributes="T">
+                        <window partitionedBy="deviceId">
+                            <description wtype="B"/>
+                            <source id="S"/>
+                        </window>
+                    </pi>
+                    <pi removeAttributes="T">
+                        <rho>
+                            <rename from="value" to="oldvalue"/>
+                            <domain dtype="previous">
+                                <window partitionedBy="deviceId">
+                                    <description wtype="B"/>
+                                    <source id="S"/>
+                                </window>
+                            </domain>  
+                        </rho>
+                    </pi>
+                </join>
+            </sigma>
+        </streamer>
+	</query>
+	<sources>
+		<source file="tests/join/diffjulien.S" id="S" impl="FileStreamImpl"/>
+	</sources>
+</astral>

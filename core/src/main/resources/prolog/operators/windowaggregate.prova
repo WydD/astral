@@ -1,0 +1,22 @@
+% Euclide...
+pgcd(A, 0, A) :- !.
+pgcd(A, B, C) :- D=A mod B, pgcd(B, D, C).
+
+macrogroup([aggregation, Agg, [[pi,_, C]]], [aggregation, Agg, C]):- !.
+
+macrogroup([aggregation, Agg, [[window, B, C]]], [windowaggregate, WinAggMap, C]):-
+    map_get(B, "description", [D]),
+    map_get(D, "type", "T"),
+    map_get(D, "rate", Slide),
+    map_get(D, "width", Range), !,
+    map_replace([B, Agg], MergedMap),
+    SlideInt=java.lang.Integer.parseInt(Slide),
+    RangeInt=java.lang.Integer.parseInt(Range),
+    pgcd(SlideInt, RangeInt, PGCD),
+    concat([PGCD],P),
+    slidingwindowsugar("T", "range", {"type":"T", "range":P, "slide":P}, Tmp),
+    map_get(D, "impl", Impl),
+    map_put(Tmp, ['impl', Impl], FullPanDescription),
+    map_put(MergedMap, ["description", [FullPanDescription,D]], WinAggMap).
+
+implrules([windowaggregate,_,_,_], "WindowAggregateImpl"):- !.

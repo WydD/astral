@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2012 LIG SIGMA
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <name>AStrAL: GUI</name>
+    <parent>
+        <artifactId>astral</artifactId>
+        <groupId>fr.lig.sigma</groupId>
+        <version>1.1-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>fr.lig.sigma.astral</groupId>
+    <artifactId>gui</artifactId>
+
+    <packaging>bundle</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.13</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo.annotations</artifactId>
+            <version>1.8.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.ipojo</artifactId>
+            <version>1.8.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jgraph</groupId>
+            <artifactId>jgraphx</artifactId>
+            <version>1.4.0.9</version>
+        </dependency>
+        <dependency>
+            <groupId>com.intellij</groupId>
+            <artifactId>javac2</artifactId>
+            <version>7.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>3.0</version>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.jdom</groupId>-->
+            <!--<artifactId>jdom</artifactId>-->
+            <!--<version>1.1</version>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>net.sf.jung</groupId>
+            <artifactId>jung-api</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jung</groupId>
+            <artifactId>jung-graph-impl</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jung</groupId>
+            <artifactId>jung-visualization</artifactId>
+            <version>2.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>api</artifactId>
+            <version>${pom.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>${pom.groupId}</groupId>-->
+            <!--<artifactId>network</artifactId>-->
+            <!--<version>${pom.version}</version>-->
+            <!--<scope>provided</scope>-->
+        <!--</dependency>-->
+        <dependency>
+            <groupId>${pom.groupId}</groupId>
+            <artifactId>parser</artifactId>
+            <version>${pom.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <id>install-library</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+
+                        <configuration>
+                            <groupId>jgraph</groupId>
+                            <artifactId>jgraphx</artifactId>
+                            <version>1.4.0.9</version>
+                            <packaging>jar</packaging>
+                            <file>${pom.basedir}/libs/jgraphx-1.4.0.9.jar</file>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+
+                <executions>
+                    <execution>
+                        <id>javac2</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+
+                        <configuration>
+                            <tasks>
+                                <taskdef name="javac2" classname="com.intellij.ant.Javac2"
+                                         classpathref="maven.compile.classpath"/>
+                                <javac2 srcdir="${pom.build.sourceDirectory}" destdir="${pom.build.outputDirectory}"
+                                        debug="true" target="1.5" source="1.5">
+                                    <compilerarg value="-Xlint:unchecked"/>
+                                    <classpath refid="maven.compile.classpath"/>
+                                </javac2>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>1.4.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Bundle-Name>${pom.name}</Bundle-Name>
+                        <Bundle-SymbolicName>${pom.groupId}.${pom.artifactId}</Bundle-SymbolicName>
+                        <Import-Package>
+                            fr.lig.sigma.astral.common,
+                            fr.lig.sigma.astral,
+                            fr.lig.sigma.astral.common.event,
+                            fr.lig.sigma.astral.common.structure,
+                            fr.lig.sigma.astral.operators,
+                            fr.lig.sigma.astral.operators.misc,
+                            fr.lig.sigma.astral.source,
+                            fr.lig.sigma.astral.interpreter,
+                            fr.lig.sigma.astral.network;resolution:=optional,
+                            javax.swing,
+                            javax.swing.border,
+                            javax.swing.event,
+                            javax.swing.filechooser,
+                            javax.swing.text,
+                            javax.swing.tree,
+                            javax.swing.table,
+                            javax.xml,
+                            javax.xml.datatype,
+                            javax.xml.namespace,
+                            javax.xml.parsers,
+                            javax.xml.transform,
+                            javax.xml.transform.dom,
+                            javax.xml.transform.sax,
+                            javax.xml.transform.stream,
+                            javax.xml.validation,
+                            javax.xml.xpath,
+                            org.w3c.dom,
+                            *;resolution:=optional
+                        </Import-Package>
+                        <!--<Private-Package>-->
+                            <!--com.mxgraph.*,-->
+                            <!--com.intellij.*,-->
+                            <!--edu.uci.ics.jung.*,-->
+                            <!--org.apache.commons.collections15.*-->
+                        <!--</Private-Package>-->
+                        <Export-Package>
+                            fr.lig.sigma.astral.gui.*
+                        </Export-Package>
+                        <Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
+                    </instructions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-ipojo-plugin</artifactId>
+                <version>1.8.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>ipojo-bundle</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

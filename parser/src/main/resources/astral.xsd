@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2012 LIG SIGMA
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="astral" type="astralType"/>
+
+    <xs:complexType name="astralType">
+        <xs:all>
+            <xs:element type="queryType" name="query" minOccurs="0"/>
+            <xs:element type="sourcesType" name="sources" minOccurs="0"/>
+            <xs:element type="handlersType" name="handlers" minOccurs="0"/>
+        </xs:all>
+    </xs:complexType>
+    <xs:complexType name="sourcesType">
+        <xs:sequence>
+            <xs:element type="sourceType" name="source" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="handlersType">
+        <xs:sequence>
+            <xs:element type="handlerType" name="handler" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="handlerType">
+        <xs:sequence>
+            <xs:element type="filterType" minOccurs="0" maxOccurs="unbounded" name="filter"/>
+        </xs:sequence>
+        <xs:attribute type="xs:string" name="type"/>
+        <xs:anyAttribute processContents="lax"/>
+    </xs:complexType>
+    <xs:complexType name="sourceType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:sequence>
+                    <xs:element type="filterType" minOccurs="0" maxOccurs="unbounded" name="filter"/>
+                </xs:sequence>
+                <xs:anyAttribute processContents="lax"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="filterType">
+        <xs:attribute name="name"/>
+        <xs:attribute name="value"/>
+    </xs:complexType>
+    <xs:group name="entityGroup">
+        <xs:choice>
+            <xs:element type="sigmaType" name="sigma"/>
+            <xs:element type="piType" name="pi"/>
+            <xs:element type="rhoType" name="rho"/>
+            <xs:element type="evaluateType" name="evaluate"/>
+            <xs:element type="aggType" name="aggregation"/>
+            <xs:element type="joinType" name="join"/>
+            <xs:element type="streamJoinType" name="streamjoin"/>
+            <xs:element type="entityType" name="source"/>
+            <xs:element type="streamerType" name="streamer"/>
+            <xs:element type="windowType" name="window"/>
+            <xs:element type="domainType" name="domain"/>
+            <xs:element type="unionType" name="union"/>
+            <xs:element type="spreadType" name="spread"/>
+        </xs:choice>
+    </xs:group>
+    <xs:complexType name="queryType">
+        <xs:group ref="entityGroup"/>
+        <xs:attribute type="xs:string" name="t0"/>
+        <xs:attribute type="xs:string" name="name" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="entityType">
+        <xs:attribute type="xs:string" name="impl"/>
+        <xs:attribute type="xs:string" name="id"/>
+        <xs:attribute type="xs:string" name="type"/>
+        <xs:attribute name="attributes">
+            <xs:simpleType>
+                <xs:restriction base="xs:string">
+                    <xs:pattern value="([a-z]?[0-9]?[A-Z]?,?)*"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:attribute>
+    </xs:complexType>
+    <xs:complexType name="streamerType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:group ref="entityGroup"/>
+                <xs:attribute name="stype">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:enumeration value="Rsr"/>
+                            <xs:enumeration value="Rsu"/>
+                            <xs:enumeration value="Ds"/>
+                            <xs:enumeration value="Is"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="windowType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:sequence>
+                    <xs:element type="descriptionType" name="description"/>
+                    <xs:group ref="entityGroup"/>
+                </xs:sequence>
+                <xs:attribute type="xs:string" name="partitionedBy" use="optional"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="domainType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:sequence>
+                    <xs:element type="descriptionType" name="description" minOccurs="0"/>
+                    <xs:group ref="entityGroup"/>
+                </xs:sequence>
+                <xs:attribute type="xs:string" name="dtype" use="optional"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="aggType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="aggregate" type="aggFuncType"/>
+                    <xs:group ref="entityGroup"/>
+                </xs:sequence>
+                <xs:attribute name="groupBy">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:pattern value="([a-z]?[0-9]?[A-Z]?,?)*"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="piType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:group ref="entityGroup"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="rhoType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:sequence>
+                    <xs:element maxOccurs="unbounded" name="rename" type="renameType"/>
+                    <xs:group ref="entityGroup"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="sigmaType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:sequence>
+                    <xs:element type="conditionType" name="condition" minOccurs="0"/>
+                    <xs:group ref="entityGroup"/>
+                </xs:sequence>
+                <xs:attribute type="xs:string" name="condition" use="optional"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="renameType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="from"/>
+                <xs:attribute type="xs:string" name="to"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="aggFuncType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="attribute"/>
+                <xs:attribute type="xs:string" name="function"/>
+                <xs:attribute type="xs:string" name="to"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="conditionType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="attribute"/>
+                <xs:attribute type="xs:string" name="operator"/>
+                <xs:attribute type="xs:string" name="value"/>
+                <xs:attribute type="xs:string" name="otherAttribute"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="descriptionType">
+        <xs:simpleContent>
+            <xs:extension base="xs:string">
+                <xs:attribute type="xs:string" name="type"/>
+                <xs:anyAttribute/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+    <xs:complexType name="joinType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:sequence>
+                    <xs:element type="conditionType" name="condition" minOccurs="0"/>
+                    <xs:group ref="entityGroup" minOccurs="2" maxOccurs="2"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="unionType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:group ref="entityGroup" minOccurs="2" maxOccurs="unbounded"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="streamJoinType">
+        <xs:complexContent>
+            <xs:extension base="joinType">
+                <xs:attribute name="band">
+                    <xs:simpleType>
+                        <xs:restriction base="xs:string">
+                            <xs:pattern value="([0-9]+)|unbounded"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="spreadType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:group ref="entityGroup"/>
+                <xs:attribute name="on" use="optional"/>
+                <xs:attribute name="all" use="optional" fixed="all"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="evaluateType">
+        <xs:complexContent>
+            <xs:extension base="entityType">
+                <xs:group ref="entityGroup"/>
+                <xs:attribute name="to" use="required"/>
+                <xs:attribute name="expression" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+</xs:schema>

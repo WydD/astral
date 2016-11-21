@@ -1,0 +1,399 @@
+/*
+ * This file is part of AStrAL.
+ *
+ * AStrAL is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Foobar is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with AStrAL.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Copyright 2009-2010 LIG SIGMA
+ */
+ 
+package fr.lig.sigma.astral.interpreter.parser;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
+
+import java.io.File;
+
+import java_cup.runtime.Symbol;
+import fr.lig.sigma.astral.interpreter.*;
+import fr.lig.sigma.astral.interpreter.lexer.Lexer;
+import org.w3c.dom.*;
+
+scan with {: return lexer.next_token(); :};
+
+parser code {: 
+  public boolean syntaxErrors = false;
+
+  Lexer lexer;
+  Document doc;
+
+  public Parser(Lexer lex, Document doc) {
+      super(lex);
+      lexer = lex;
+      this.doc = doc;
+  }
+
+  public Element create(String name) {
+    return doc.createElement(name);
+  }
+
+  public void report_error(String message) throws Error {
+    report_error(message,null);
+    throw new Error(message);
+  }
+  public void report_error(String message, Object info) throws Error {
+    syntaxErrors = true;
+    
+    System.err.print(message);
+    
+    if ( !(info instanceof Symbol) ) return;
+    Symbol symbol = (Symbol) info;
+    
+    if ( symbol.left < 0 || symbol.right < 0 ) return;
+    
+    System.err.println(" at line "+symbol.left+", column "+symbol.right);
+  }
+:} ; 
+
+terminal         PI, RHO,UNDERSCORE, T0, COMMA, COLON, SEMICOLON, SLASH, ACCENT, G, UNION;
+terminal         LWIN, RWIN, LPAR, RPAR, BEGIN, END;
+terminal         ACCUMULATIVE_RELATION, SIMPLE_STREAM, SIMPLE_RELATION,FILE_RELATION,FILE_STREAM,
+                 REMOTE_STREAM, REMOTE_RELATION, DECLARE;
+
+terminal String STREAMERS;
+terminal String SPREAD;  
+terminal String BOPERATORS;
+terminal String INTCONST;
+terminal String IDENT;  
+terminal String STRING;
+terminal String D;
+terminal String EVAL;
+terminal String SIGMA;
+terminal String JOIN;
+
+non terminal Element query;
+non terminal Element program;  
+non terminal Element source_declaration;
+non terminal String source_name;   
+non terminal Map<String,String> source;
+non terminal List<Element> other_sources;
+non terminal Element entity;
+non terminal Element entity_part;
+non terminal Element condition;
+non terminal Element optional_condition;
+non terminal String optional_attribute_list;
+non terminal Element window_desc;
+non terminal String distance;  
+non terminal List<Element> rho_operation;
+non terminal List<Element> agg_operation; 
+non terminal String attribute_list;
+
+start with program;
+
+program ::=
+    source_declaration:s query:q {:
+        RESULT = parser.create("astral");
+        RESULT.appendChild(s);
+        if(q != null)
+            RESULT.appendChild(q);
+    :}|
+    query:q {:
+        RESULT = parser.create("astral");
+        if(q != null)
+            RESULT.appendChild(q);
+    :};
+
+source_declaration ::=
+    DECLARE BEGIN other_sources:l END {:
+        RESULT = parser.create("sources");
+        for(Element e : l) {
+            RESULT.appendChild(e);
+        }
+    :};
+
+other_sources ::=
+    source_name:name source:p SEMICOLON other_sources:l {:
+        RESULT = l;
+        Element e = parser.create("source");
+        for(Map.Entry<String, String> entry : p.entrySet())
+            e.setAttribute(entry.getKey(), entry.getValue());
+        e.setAttribute("id", name);
+        l.add(e);
+    :}|
+    {:
+        RESULT = new LinkedList<Element>();
+    :};
+
+source_name ::=
+    IDENT:name COLON {: RESULT = name; :};
+            
+source ::= 
+    SIMPLE_RELATION LPAR INTCONST:freq COMMA INTCONST:card RPAR {:
+        RESULT = new HashMap<String,String>();
+        RESULT.put("stype", "SimpleRelation");
+        RESULT.put("rate", freq);
+        RESULT.put("card", card);
+    :}|
+    SIMPLE_STREAM LPAR INTCONST:freq COMMA INTCONST:card RPAR {:
+        RESULT = new HashMap<String,String>();
+        RESULT.put("stype", "SimpleStream");
+        RESULT.put("rate", freq);
+        RESULT.put("card", card);
+    :}|
+    ACCUMULATIVE_RELATION LPAR INTCONST:freq COMMA INTCONST:card RPAR {:
+        RESULT = new HashMap<String,String>();
+        RESULT.put("stype", "AccumulativeRelation");
+        RESULT.put("rate", freq);
+        RESULT.put("card", card);
+    :}|
+    REMOTE_RELATION LPAR STRING:host COMMA INTCONST:port RPAR {:
+        RESULT = new HashMap<String,String>();
+        RESULT.put("stype", "BufferedRemoteRelation");
+        RESULT.put("host", host);
+        RESULT.put("port", port);
+    :}|
+    REMOTE_STREAM LPAR STRING:host COMMA INTCONST:port RPAR {:
+        RESULT = new HashMap<String,String>();
+        RESULT.put("stype", "BufferedRemoteStream");
+        RESULT.put("host", host);
+        RESULT.put("port", port);
+    :}|
+    FILE_STREAM LPAR STRING:path RPAR  {:
+        RESULT = new HashMap<String,String>();
+        RESULT.put("stype", "FileStream");
+        RESULT.put("file", path);
+    :}|
+    FILE_RELATION LPAR STRING:path RPAR {:
+        RESULT = new HashMap<String,String>();
+        RESULT.put("stype", "FileRelation");
+        RESULT.put("file", path);
+    :};
+    
+query ::=
+    T0 IDENT:i entity:a {:
+        RESULT = parser.create("query");
+        RESULT.setAttribute("t0", "default");
+        RESULT.appendChild(a);
+    :}|
+    entity:a {:
+        RESULT = parser.create("query");
+        RESULT.setAttribute("t0", "auto");
+        RESULT.appendChild(a);
+    :}|
+    T0 INTCONST:t entity:a {:
+        RESULT = parser.create("query");
+        RESULT.setAttribute("t0", t);
+        RESULT.appendChild(a);
+    :}|
+    {: RESULT = null; :};
+
+entity_part ::=
+    IDENT:a {: //SOURCE
+        RESULT = parser.create("source");
+        RESULT.setAttribute("id", a);
+    :}|
+    entity_part:a LWIN window_desc:desc RWIN {:
+        RESULT = parser.create("window");
+        RESULT.appendChild(desc);     
+        RESULT.appendChild(a);
+    :}|
+    entity_part:a LWIN IDENT:attr SLASH window_desc:desc RWIN {:
+        RESULT = parser.create("window");
+        RESULT.setAttribute("partitionedBy", attr);
+        RESULT.appendChild(desc);
+        RESULT.appendChild(a);
+    :}|
+    entity_part:a ACCENT INTCONST:v {:
+        RESULT = parser.create("domain");
+        RESULT.setAttribute("dtype", "fix");
+        RESULT.setAttribute("at", v);
+        RESULT.appendChild(a);
+    :}|
+    entity_part:a ACCENT IDENT:desc {:
+        RESULT = parser.create("domain");
+        RESULT.setAttribute("dtype", "fix");
+        RESULT.setAttribute("at", desc);
+        RESULT.appendChild(a);
+    :}|
+    LPAR entity:a RPAR {: RESULT = a; :};
+entity ::=
+    entity_part:a {: RESULT = a; :}|
+    SIGMA:c entity:e {:
+        RESULT = parser.create("sigma");
+        RESULT.setAttribute("condition",c);
+        RESULT.appendChild(e);
+    :}|
+    BEGIN attribute_list:list END G BEGIN agg_operation:aop END entity:e {:
+        RESULT = parser.create("aggregation");
+        RESULT.setAttribute("groupBy", list);
+        for(Element elt : aop)
+            RESULT.appendChild(elt);
+        RESULT.appendChild(e);
+    :}|
+    attribute_list:list G BEGIN agg_operation:aop END entity:e {:
+        RESULT = parser.create("aggregation");
+        RESULT.setAttribute("groupBy", list);
+        for(Element elt : aop)
+            RESULT.appendChild(elt);
+        RESULT.appendChild(e);
+    :}|
+    attribute_list:list G agg_operation:aop entity:e {:
+        RESULT = parser.create("aggregation");
+        RESULT.setAttribute("groupBy", list);
+        for(Element elt : aop)
+            RESULT.appendChild(elt);
+        RESULT.appendChild(e);
+    :}|
+    BEGIN attribute_list:list END G agg_operation:aop entity:e {:
+        RESULT = parser.create("aggregation");
+        RESULT.setAttribute("groupBy", list);
+        for(Element elt : aop)
+            RESULT.appendChild(elt);
+        RESULT.appendChild(e);
+    :}|
+    D:c ACCENT IDENT:t2 entity:e {:
+        RESULT = parser.create("domain");
+        RESULT.setAttribute("dtype", "generic");
+        RESULT.setAttribute("to", t2);
+        RESULT.setAttribute("condition",c);
+        RESULT.appendChild(e);
+    :}|
+    EVAL:expr ACCENT BEGIN IDENT:a END entity:e {:
+        RESULT = parser.create("evaluate");
+        RESULT.setAttribute("to", a);
+        RESULT.setAttribute("expression", expr);
+        RESULT.appendChild(e);
+    :}|
+    STREAMERS:str LPAR entity:e RPAR {:
+        RESULT = parser.create("streamer");
+        RESULT.setAttribute("stype", str);
+        RESULT.appendChild(e);
+    :}|
+    RHO UNDERSCORE BEGIN rho_operation:rop END entity:e {:
+        RESULT = parser.create("rho");
+        for(Element elt : rop)
+            RESULT.appendChild(elt);
+        RESULT.appendChild(e);
+    :}|
+    SPREAD:all optional_attribute_list:list entity:e {:
+        RESULT = parser.create("spread");
+        if (list != null)
+            RESULT.setAttribute("on", list);
+        if(all == null)
+            RESULT.setAttribute("all", "all");
+        RESULT.appendChild(e);
+    :}|
+    PI UNDERSCORE BEGIN attribute_list:list END entity:e {:
+        RESULT = parser.create("pi");
+        RESULT.setAttribute("attributes", list);
+        RESULT.appendChild(e);
+    :}|
+    entity_part:left UNION entity:right {:
+        RESULT = parser.create("union");
+        RESULT.appendChild(left);
+        RESULT.appendChild(right);
+    :}|
+    entity_part:left JOIN:opt entity:right {:
+        RESULT = parser.create("join");
+        if(opt != null && !opt.isEmpty())
+            RESULT.setAttribute("condition", opt);
+        RESULT.appendChild(left);
+        RESULT.appendChild(right);
+    :}|
+    entity_part:left JOIN:opt ACCENT distance:d entity:right {:
+        RESULT = parser.create("streamjoin");
+        RESULT.setAttribute("band", d);
+        if(opt != null && !opt.isEmpty())
+            RESULT.setAttribute("condition", opt);
+        RESULT.appendChild(left);
+        RESULT.appendChild(right);
+    :};
+
+distance ::= INTCONST:v {: RESULT = v; :} | IDENT {: RESULT = "infinite"; :}; 
+
+rho_operation ::=
+    IDENT:dest SLASH IDENT:source {:
+        RESULT = new LinkedList<Element>();
+        Element e = parser.create("rename");
+        e.setAttribute("from", source);
+        e.setAttribute("to", dest);
+        RESULT.add(e);
+    :}|
+    IDENT:dest SLASH IDENT:source COMMA rho_operation:rop {:
+        Element e = parser.create("rename");
+        e.setAttribute("from", source);
+        e.setAttribute("to", dest);
+        rop.add(e);
+        RESULT = rop;
+    :}; 
+
+agg_operation ::=
+    IDENT:func LPAR IDENT:attr RPAR {:
+        RESULT = new LinkedList<Element>();
+        Element e = parser.create("aggregate");
+        e.setAttribute("function", func);
+        e.setAttribute("attribute", attr);
+        RESULT.add(e);
+    :}|
+    IDENT:func LPAR IDENT:attr RPAR COMMA agg_operation:aop {:
+        Element e = parser.create("aggregate");
+        e.setAttribute("function", func);
+        e.setAttribute("attribute", attr);
+        aop.add(e);
+        RESULT = aop;
+    :};
+    
+condition  ::=
+    IDENT:a BOPERATORS:op INTCONST:v {:
+        RESULT = parser.create("condition");
+        RESULT.setAttribute("attribute", a);
+        RESULT.setAttribute("operator", op);
+        RESULT.setAttribute("value", v);
+    :}|
+    IDENT:a BOPERATORS:op STRING:v {:
+        RESULT = parser.create("condition");
+        RESULT.setAttribute("attribute", a);
+        RESULT.setAttribute("operator", op);
+        RESULT.setAttribute("value", v);
+    :}|
+    IDENT:a BOPERATORS:op IDENT:v {:
+        RESULT = parser.create("condition");
+        RESULT.setAttribute("attribute", a);
+        RESULT.setAttribute("operator", op);
+        RESULT.setAttribute("otherAttribute", v);
+    :};
+               
+optional_condition ::= UNDERSCORE BEGIN condition:c END {: RESULT = c; :} | {: RESULT = null; :};
+optional_attribute_list ::= UNDERSCORE BEGIN attribute_list:c END {: RESULT = c; :} | {: RESULT = null; :};
+
+window_desc ::=
+    IDENT:a {: //Special case
+        RESULT = parser.create("description");
+        RESULT.setAttribute("wtype", a);
+    :}|
+    IDENT:type INTCONST:a COMMA INTCONST:b COMMA INTCONST:c COMMA INTCONST:d COMMA INTCONST:r {:
+        RESULT = parser.create("description");
+        RESULT.setAttribute("wtype", type);
+        RESULT.setAttribute("a", a);
+        RESULT.setAttribute("b", b);
+        RESULT.setAttribute("c", c);
+        RESULT.setAttribute("d", d);
+        RESULT.setAttribute("rate", r);
+    :};
+attribute_list ::=
+    IDENT:a {: RESULT = a; :}|
+    IDENT:a COMMA attribute_list:list {:
+        RESULT = a+","+list;
+    :};

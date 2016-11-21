@@ -1,0 +1,17 @@
+attribrules([spread,_,_,[T]], T):- !.
+typerules([spread,_,_, [T]], T):- stream(T), !.
+implrules([spread,_,_,_], "SingleSpread"):- !.
+
+parsenode([spread,B,C],_, [spread,Bc,C]):-
+    tokenizeparameter(B, 'on', ',', Bc), !.
+
+pushselectionrule(
+    [sigma, Arg1, [
+        [spread,Arg2, [C]]
+    ]],
+    [spread, Arg2, [
+        [sigma, Arg1, [C]]
+    ]]
+):-
+    % \sigma_d \lhd_a E = \lhd_a \sigma_{d} E
+    !.

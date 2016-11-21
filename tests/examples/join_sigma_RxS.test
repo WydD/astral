@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+<query t0="auto">
+<sigma condition="id==1">
+<streamer stype="Rsu">
+<join>
+<window>
+<description wtype="L"/>
+<source attributes="id,T,PHYID" id="S" sourceAttributes="id,T,PHYID" type="Stream"/>
+</window>
+<source attributes="v,PHYID" id="R" sourceAttributes="v,PHYID" type="Relation"/>
+</join>
+</streamer>
+</sigma>
+</query>
+<sources>
+<source attributes="id,T,PHYID" file="tests/examples/join_sigma_RxS.S" id="S" impl="FileStreamImpl" type="Stream"/>
+<source attributes="v,PHYID" file="tests/examples/join_sigma_RxS.R" id="R" impl="FileRelationImpl" type="Relation"/>
+</sources>
+</astral>

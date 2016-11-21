@@ -1,0 +1,44 @@
+typerules([streamer,_,_, [Ti]], To):- relation(Ti), !, stream(To).
+attribrules([streamer,_,_, [T]], ['T'|Tmp]):- !, remove(T, 'T', Tmp).
+
+streamerstructure(2, {"lastState": "false", "buildContent":"false"}).
+streamerstructure(1, {"lastState": "false", "buildContent":"true", "keepDiff":"false"}).
+streamerstructure(0, {"lastState": "true"}).
+implrules([streamer,B,[C],_], "DynamicIs", [P]):-      map_get(B,'stype','Is'), dynamicnode(C), streamerstructure(2, P), !.
+implrules([streamer,B,_,_], "Is", [P]):-             map_get(B,'stype','Is'), streamerstructure(0, P), !.
+implrules([streamer,B,[C],_], "DynamicDs", [P]):-      map_get(B,'stype','Ds'), dynamicnode(C), streamerstructure(2, P), !.
+implrules([streamer,B,_,_], "Ds", [P]):-             map_get(B,'stype','Ds'), streamerstructure(0, P), !.
+implrules([streamer,B,_,_], "Rsu", [P]):-            map_get(B,'stype','Rsu'), streamerstructure(1, P), !.
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [streamer,Arg2,[C]]
+    ]],
+    [streamer, Arg3, [
+        [pi, Arg4, [C]]
+    ]]
+):-
+    map_get(Arg1, "attributes", AttrA),
+    remove(AttrA,"T",Attr), !,
+    map_put(Arg2, ['attributes', AttrA], Arg3),
+    relation(RType),
+    map_put(Arg1, ['type', RType], Arg4Tmp),
+    map_put(Arg4Tmp, ['attributes', Attr], Arg4).
+
+pushselectionrule(
+    [sigma, Arg1, [
+        [streamer,Arg2, [C]]
+    ]],
+    [streamer, Arg2, [
+        [sigma, Arg1, [C]]
+    ]]
+):-
+    % valid for types
+    map_get(Arg1, "conditionAttributes", CondAttr),
+    not_element("T", CondAttr),
+    map_get(Arg2, "stype", SType),
+    isPushableSelectionStreamer(SType), !.
+
+isPushableSelectionStreamer("Is").
+isPushableSelectionStreamer("Ds").
+isPushableSelectionStreamer("Rsr").

@@ -1,0 +1,54 @@
+unaryimpl(rho,_, "RhoRelationalOperation").
+attribrules([rho,B,_,[T]], To):-
+	map_get(B, 'rename', R), !,
+	changeattribute(T, R, ['from', 'to'], To).
+
+
+changeattribute(L,Y,Arg,Out):- changeattribute(L,Y,Arg,Out, "",_).
+changeattribute(L,[],_,L, SIn, SIn).
+changeattribute(L,[R|Y],[AFrom,ATo],[To|Lo], SIn, SOut):-
+    changeattribute(L, Y, [AFrom,ATo], Ly, SIn, STmp),
+    map_get(R, AFrom, From),
+	element(From, Ly), !,
+	map_get(R, ATo, To),
+	concat(['\b', From,'\b'], Pattern),
+	concat([STmp],STmpStr),
+	SOut=STmpStr.replaceAll(Pattern, To),
+    remove(Ly, From, Lo).
+changeattribute(L,[R|Y],[AFrom,ATo],Ly, SIn, SOut):- !,
+    changeattribute(L, Y, [AFrom,ATo], Ly, SIn, SOut).
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [rho,Arg2,[C]]
+    ]],
+    [rho, Arg3, [
+        [pi,Arg4,[C]]
+    ]]
+):-
+    map_get(Arg1, "attributes", AttrA),
+    map_get(Arg2, "rename", Rename),
+    changeattribute(AttrA, Rename, ['to', 'from'], Attr), !,
+    map_put(Arg2, ['attributes', AttrA], Arg3),
+    map_put(Arg1, ['attributes', Attr], Arg4).
+
+% \sigma_c \rho_{B/A}
+%  	Si A \in Attr(C)
+%       c' = replace(A,B,c)
+%       \rho_{B/A} \sigma_c'
+%   Sinon
+%       \rho_{B/A} \sigma_c
+pushselectionrule(
+    [sigma, Arg1, [
+        [rho,Arg2,[C]]
+    ]],
+    [rho,Arg2, [
+        [sigma,FinalArg,[C]]
+    ]]
+):-
+    map_get(Arg1, "conditionAttributes", CondAttr),
+    map_get(Arg1, "condition", Cond),
+    map_get(Arg2, "attributes", Attr),
+    map_get(Arg2, "rename", Rename),
+    changeattribute(CondAttr, Rename, ['to', 'from'], NewCondAttr, Cond, NewCond), !,
+    map_replace([Arg1, {'attributes': Attr, 'conditionAttributes': NewCondAttr, 'condition': NewCond}], FinalArg).

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2012 LIG SIGMA
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+	<query t0="auto">
+		<streamer stype="Rsu">
+			<rho>
+				<rename from="seg2" to="seg"/>
+				<pi attributes="vid,seg2">
+					<join condition="dir == 0 &amp;&amp; (seg &lt;= seg2 &amp;&amp; seg &gt;= (seg2-4)) || dir == 1 &amp;&amp; (seg &gt;= seg2 &amp;&amp; seg &lt;= (seg2+4))">
+						<sigma condition="lane != 4">
+							<source id="SegChange"/>
+						</sigma>
+						<rho>
+							<rename from="seg" to="seg2"/>
+							<source id="AccidentInSeg"/>
+						</rho>
+					</join>
+				</pi>
+			</rho>
+		</streamer>
+	</query>
+</astral>

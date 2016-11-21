@@ -1,0 +1,6 @@
+dynamicoperator([unary,B,C]):- !, map_get(B, 'type', T), relation(T),  dynamicoperator(C).
+
+unarystructure(0, {"lastState": "false", "buildContent":"false"}).
+implrules([unary, B,_,_], "UnaryDynamicRelationOperator", [P]):- map_get(B,'dynamic',Z), unarystructure(0, P), !.
+implrules([unary, B,_,_], "UnaryRelationOperator", [P]):- map_get(B,'type',"Relation"), unarystructure(0, P), !.
+implrules([unary, B,_,_], "UnaryRelationalStreamOperator"):- map_get(B,'type',"Stream"), !.

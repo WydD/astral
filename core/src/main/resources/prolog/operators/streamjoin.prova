@@ -1,0 +1,22 @@
+sugar([streamjoin, B, [C1,C2]],_,
+    [pi, {"removeAttributes": "T2"}, [
+        [streamer, {"stype":"Is"}, [
+            [join, Bc, [
+                [window, {"description": [{"type":"unbounded"}]}, [C1]],
+                [rho, {"rename":[{"from":"T","to":"T2"}]}, [
+                    [window, {"description":[{"type":"unbounded"}]}, [C2]]
+                ]]
+            ]]
+        ]]
+    ]]):- !,
+    streamjoincond(B, JoinCond), map_put(B, ["condition", JoinCond], Bc).
+
+streamjoincond({condition: Cond, band: D},JoinCond) :- !,
+    concat(["(",Cond,") && Math.abs(T2-T)<=",D], JoinCond).
+
+streamjoincond({band: D},JoinCond) :- !, concat(["Math.abs(T2-T)<=",D], JoinCond).
+streamjoincond({condition: JoinCond}, JoinCond):- !.
+streamjoincond(_,"0==0") :- !.
+
+% Need to build a macro operator
+implrules([streamjoin,_,_,_], "NaturalStreamJoin"):- !.

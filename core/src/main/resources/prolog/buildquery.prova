@@ -1,0 +1,154 @@
+service_id(Obj, Id):-
+    Id=$Engine.getServiceId(Obj).
+
+buildquery(X,[Core,Builder],T,Z,S):-  !,
+    Time1=java.lang.System.currentTimeMillis(),
+	infertree(X,Core,Xi,T),
+	Time2=java.lang.System.currentTimeMillis()-Time1,
+	println(["Tree ready to be build in ",Time2,"ms. ", Xi]),
+	service_id(Core, CoreID),
+	ldapfilter([$EngineID],EngineLDAP),
+	ldapfilter([CoreID],CoreLDAP),
+	buildoperator([[0,Xi], [Core,CoreLDAP,EngineLDAP,Builder]],Z,S,{},ZZ).
+
+ldapfilter([X],Z):-
+	concat(["(service.id=",X,")"],Z).
+ldapfilter([X|Y],Z):-
+	ldapfilter(Y,Yz),
+	concat(["(|(service.id=",X,")",Yz,")"],Z).
+
+buildoperatorlist(L, O, LS, Y, RIds,NewRIds):-
+    indexlist(L, 0, LIndexed),
+    length(L, Size),
+    Y=java.util.ArrayList(Size),
+    buildoperatorlistInternalNofail(LIndexed, O, LS, Y, RIds, NewRIds, Size).
+
+% List, Output,
+buildoperatorlistInternalNofail([I,[A,B,C]],_,_,_,_,_,-1):- !, println(["Can not build the following nodes,",[A,B]]), 1=0.
+buildoperatorlistInternalNofail([],_,[],_,A,A,X):- X>=0, !.
+buildoperatorlistInternalNofail(L, O, FinalLS, Y, RIds,NewRIds, Attempt):-
+    buildoperatorlistInternal(L, O, LS, Y, RIds, RIdsTmp, [], FailedNodes),
+    N=Attempt-1,
+    buildoperatorlistInternalNofail(FailedNodes, O, LS2, Y, RIdsTmp, NewRIds, N),
+    attach_all([LS2,LS], FinalLS).
+
+
+indexlist([],_,[]).
+indexlist([H|T],I,[[I,H]|Z]):-
+    J=I+1,
+    indexlist(T,J,Z).
+
+buildoperatorlistInternal([],_,[],Z,A,A,B,B):- !.
+buildoperatorlistInternal([[I,E]|T], O, [Z|X], Y, RIds,NewRIds,FailedNodes, NewFailedNodes):-
+    buildoperator([[I,E], O], Z, N, RIds,RIdsTmp), !,
+    buildoperatorlistInternal(T, O, X, Y, RIdsTmp,NewRIds, FailedNodes, NewFailedNodes),
+    Y.add(N).
+
+buildoperatorlistInternal([E|T], O, X, Y, RIds,NewRIds, FailedNodes, [E|NewFailedNodes]):- !,
+    buildoperatorlistInternal(T, O, X, Y, RIds, NewRIds, FailedNodes, NewFailedNodes).
+
+
+putRIds([A,B,C], SId, RIds, NewRIds):-
+    map_get(B, 'rid', RId), !,
+    map_put(RIds, [RId, SId], NewRIds).
+putRIds(_,_, RIds, RIds):- !.
+
+buildoperator([[I,[source,B,[]]], [Core,CoreLDAP,EngineLDAP,Builder]], Z,N,RIds,NewRIds):- !,
+	Sm=Core.getSm(),
+	map_get(B,"id",Sid), !,
+ 	P=java.util.Properties(),
+	concat(['-',I], Ranking),
+	P.put("service.ranking", Ranking),
+    E=Sm.newDuplicatedEntity(Sid, Core, P),
+	service_id(E,Z),
+    buildoperatorlist([],[],[],ChildNodes,{},{}),
+    Eo=Sm.getSource(Sid),
+	service_id(Eo,Zo),
+	concat([Z], Zs),
+    concat([Zo], Zz),
+    map_put(B, ['source.id',Zz], B2),
+    materialize(B2,Param),
+    putRIds([source,B,[]], Zs, RIds, NewRIds),
+    N=Builder.createNode("source", Param, ChildNodes, Zs).
+
+buildoperator([[I,[A,B,C]], [Core,CoreLDAP,EngineLDAP,Builder]], Z, N, RIds,NewRIds):-
+    map_get(B, 'dependentRId', RId), !,
+    concat([RId], BugFix),
+    map_get(RIds, BugFix, ServiceId),
+    map_remove([B, 'dependentRId'], BWoDep),
+    map_put(BWoDep, ['dependentSId', ServiceId], B2),
+ 	buildoperator([[I,[A,B2,C]], [Core,CoreLDAP,EngineLDAP,Builder]], Z, N, RIds,NewRIds).
+
+buildoperator([[I,[A,B,C]], [Core,CoreLDAP,EngineLDAP,Builder]], Z, N, RIds,NewRIds):-
+    map_get(B, 'description', [Desc]),
+    map_get(Desc, 'dependentRId', RId), !,
+    map_remove([Desc, 'dependentRId'], DescWoRId),
+    map_put(B,  ['dependentRId',RId], B2),
+    map_put(B2, ['description',[DescWoRId]], B3),
+ 	buildoperator([[I,[A,B3,C]], [Core,CoreLDAP,EngineLDAP,Builder]], Z, N, RIds,NewRIds).
+
+buildoperator([[I,[A,B,[]]], [Core,CoreLDAP,EngineLDAP,Builder]], Z, N, RIds,NewRIds):- !,
+ 	Sm=Core.getSm(), !,
+ 	map_get(B,"impl",Impl),
+ 	UUID=java.util.UUID.randomUUID(),
+ 	concat([UUID],Sid),
+ 	map_put(B, ['id', Sid], B1),
+ 	map_put(B1, ['entityname', Sid], B2),
+	InFilter=java.util.Properties(),
+	InFilter.put("engine",EngineLDAP),
+	InFilter.put("core",CoreLDAP),
+    map_get(B, 'dependentSId', -1, ServiceId),
+    ldapfilter([ServiceId], DependentLDAP),
+	InFilter.put("dependent",DependentLDAP),
+ 	materialize(B2,Param),
+ 	P=java.util.Properties(),
+ 	P.putAll(Param),
+	P.put("requires.filters", InFilter),
+ 	Sf=Core.getSf(),
+ 	S=Sf.createSource(Impl, P),
+ 	buildoperator([[I,[source,B2,[]]], [Core,CoreLDAP,EngineLDAP,Builder]], Z,N, RIds,NewRIds).
+
+buildoperator([[I,[A,B,C]], [Core,CoreLDAP,EngineLDAP,Builder]], Z, N, RIds,NewRIds):- !,
+	buildoperatorlist(C, [Core,CoreLDAP,EngineLDAP,Builder], ChildIDs, ChildNodes, RIds,TmpRIds),
+	ldapfilter(ChildIDs,InLDAP),
+	InFilter=java.util.Properties(),
+	InFilter.put("in",InLDAP),
+	InFilter.put("engine",EngineLDAP),
+	InFilter.put("core",CoreLDAP),
+    map_get(B, 'dependentSId', -1, ServiceId),
+    ldapfilter([ServiceId], DependentLDAP),
+	InFilter.put("dependent",DependentLDAP),
+	materialize(B,Param),
+	P=java.util.Properties(),
+	P.putAll(Param),
+	P.put("requires.filters", InFilter),
+	concat(['-',I], Ranking),
+	P.put("service.ranking", Ranking),
+	map_get(B,'impl',Impl),
+	Of=Core.getOf(),
+	O=Of.instanciateSpecificOperator(Impl,P),
+	service_id(O,Z),
+    concat([A], Name),
+    concat([Z], Zs),
+    putRIds([A,B,C], Zs, TmpRIds, NewRIds),
+    N=Builder.createNode(Name, Param, ChildNodes, Zs).
+
+buildmap(Map, [], Z):- !,
+	Z = java.util.HashMap().
+
+buildmap(Map, [H|T],Z):- !,
+	buildmap(Map, T,Z),
+	map_get(Map, H, X),
+	materialize(X,Xm),
+	Z.put(H,Xm).
+
+buildlist([], Z):- !,
+	Z=java.util.ArrayList().
+buildlist([X|Y], Z):- !,
+	materialize(X,Xm),
+	buildlist(Y,Z),
+	Z.add(Xm).
+
+materialize(X,Z):- is_map(X), !, Keys=X.keySet(), java2prova(Keys, KeyList), buildmap(X, KeyList, Z).
+materialize(X,Z):- is_list(X), !, buildlist(X,Z).
+materialize(X,X).

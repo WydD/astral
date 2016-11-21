@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+<query t0="auto">
+<domain at="42" dtype="fix">
+<source attributes="v,PHYID" id="R" sourceAttributes="v,PHYID" type="Relation"/>
+</domain>
+</query>
+<sources>
+<source attributes="v,PHYID" file="tests/domain/fix.R" id="R" impl="FileRelationImpl" type="Relation"/>
+</sources>
+</astral>

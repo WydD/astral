@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+<query t0="auto">
+<window partitionedBy="id">
+<description wtype="L"/>
+<source attributes="id,T,PHYID,temp" id="S" sourceAttributes="id,T,PHYID,temp" type="Stream"/>
+</window>
+</query>
+<sources>
+<source attributes="id,T,PHYID,temp" file="tests/windows/S.S" id="S" impl="FileStreamImpl" type="Stream"/>
+</sources>
+</astral>

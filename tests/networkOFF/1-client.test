@@ -1,0 +1,2 @@
+register S RemoteStream("localhost",5000)
+prepare R_S^condition(S[B])

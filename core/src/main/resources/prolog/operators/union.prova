@@ -1,0 +1,19 @@
+typerules([union,_,_, Ti], To):- allequal(Ti,To), !.
+attribrules([union,_,_,[T|_]], T):- !.
+
+implrules([union,B,_,_], "UnionRelation",[{"keepDiff":"false", "lastState":"false"},{"keepDiff":"false", "lastState":"false"}]):- map_get(B,'type',"Relation"), !.
+implrules([union,B,_,_], "UnionStream"):- map_get(B,'type',"Stream"), !.
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [union,Arg2,C]
+    ]],
+    [union, Arg3, D]
+):-
+    map_get(Arg1, "attributes", AttrA),
+    injectpi(C, AttrA, Arg1, NumInject, D),
+    NumInject > 0,
+    !,
+    map_put(Arg2, ['attributes', Attr], Arg3).
+% Inject selections...
+% \sigma_c (A U B) = (\sigma_c A) U (\sigma_c B)

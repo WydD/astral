@@ -1,0 +1,51 @@
+sugar([fix, B, C],_, [domain, [["dtype","fix"]|B],C]):- !.
+
+% Change <domain dtype="XXX" a="XXX"> into <domain><description dtype="XXX" a="XXX"/>
+sugar([domain, B, C],_,[domain, {"description": [Description]}, C]):-
+    map_get(B, "dtype", Type),
+    map_missing(B, "description"),  !,
+    map_remove([B, "dtype"], BWithoutType),
+    map_put(BWithoutType, ["type", Type], Description).
+
+sugar([domain, B, C],_,[domain, Bc, C]):-
+    map_get(B, "description", [Desc]),
+    map_get(Desc, "at", "t0"), !,
+    map_put(Desc, ["at", "-1"], DescB),
+    map_put(B, ["description", [DescB]], Bc).
+
+descriptionimpl(domain, "previous", "PreviousTime").
+descriptionimpl(domain, "hold", "TimeHold").
+descriptionimpl(domain, "fix", "TimeFix").
+descriptionimpl(domain, "depends", "DependentServiceTime").
+
+attribrules([domain,_,_,[T]], T):- !.
+typerules([domain,_,_, [T]], T):- relation(T), !.
+
+dynamicoperator([domain,B,C]):-  map_get(B, "description", [D]), map_get(D, "type", "previous"), !, dynamicoperator(C).
+
+domainstructure(1, {"buildContent": "false"}).
+domainstructure(0, {"keepDiff": "false"}).
+implrules([domain,B,_,_], "DynamicPreviousDomainImpl", [P]):- isdynamic(B), map_get(B, "description", [D]), map_get(D, "type", "previous"), domainstructure(1,P), !.
+implrules([domain,_,_,_], "DomainManipulator", [P]):- domainstructure(0,P), !.
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [domain,Arg2,[C]]
+    ]],
+    [domain, Arg3, [
+        [pi, Arg1, [C]]
+    ]]
+):-
+    map_get(Arg1, "attributes", AttrA),
+    map_put(Arg2, ['attributes', AttrA], Arg3).
+
+pushselectionrule(
+    [sigma, Arg1, [
+        [domain,Arg2, [C]]
+    ]],
+    [domain, Arg2, [
+        [sigma, Arg1, [C]]
+    ]]
+):-
+    % \sigma_d \D_f^c E = \sigma_{d} \D_f^c E
+    !.

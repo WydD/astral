@@ -1,0 +1,51 @@
+typerules([aggregation,_,_, [T]], T):- relation(T), !.
+attribrules([aggregation,B,_,[T]], To):- !,
+    map_get(B, "aggregate", [], R),
+    map_get(B, "groupBy", [], Grp),
+	maplist_get(R, 'to', AgAttr),
+	union([Grp,AgAttr],To).
+
+sugar([aggregation, B, C],_,[aggregation, Bc, C]):-
+    map_get(B, "aggregate", Aggregate),
+    old_aggregate_sugar(Aggregate, NewAggregate, N), N>0, !,
+    map_put(B, ["aggregate",NewAggregate], Bc).
+
+sugar([aggregation, B, C],_,[aggregation, Bc, C]):-
+    map_missing(B, "aggregate"), !,
+    map_put(B, ["aggregate",[]], Bc).
+
+old_aggregate_sugar([], [], 0).
+old_aggregate_sugar([H|T], [{"function": Expr, "to": To}|Res], M):-
+    map_get(H, "attribute", Attribute), !,
+    map_get(H, "function", Function),
+    map_get(H, "to", To),
+    concat([Function, "(", Attribute, ")"], Expr),
+    old_aggregate_sugar(T, Res, N),
+    M=N+1.
+old_aggregate_sugar([H|T], [H|Res], N):- !,
+    old_aggregate_sugar(T, Res, N).
+
+parsenode([aggregation,B,C],_, [aggregation,Bc,C]):-
+    tokenizeparameter(B, 'groupBy', ',', Bc), !.
+
+implrules([aggregation,_,_,_], "AggregationImpl", [{"keepDiff":"false", "lastState":"false"}]):- !.
+
+expressionlist_get_attributes([],[]).
+expressionlist_get_attributes(AF, [H|AggExpr],[AttrList|AggAttr]):-
+    JavaAttrList=AF.getAttributes(H),
+    java2prova(JavaAttrList,AttrList),
+    expressionlist_get_attributes(AF, AggExpr, AggAttr).
+
+pushprojectionrule(
+    [aggregation,Arg2,[C]],
+        [aggregation, Arg2, [
+            [pi, {'attributes':Attr, 'type': RType}, [C]]
+        ]]
+):-
+    map_get(Arg2, "aggregate", Aggregate),
+    map_get(Arg2, "groupBy", [], GroupBy),
+    maplist_get(Aggregate, "expression", AggExpr),
+    AF=$Core.getAf(),
+    expressionlist_get_attributes(AF, AggExpr, AggAttr),
+    union([GroupBy, AggAttr], Attr),
+    necessarypi(C, Attr), !, relation(RType).

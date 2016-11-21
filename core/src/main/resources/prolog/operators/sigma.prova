@@ -1,0 +1,34 @@
+attribrules([sigma,_,_, [T]], T):- !.
+unaryimpl(sigma,_, "SigmaRelationalOperation").
+
+pushprojectionrule(
+    [pi, Arg1, [
+        [sigma,Arg2,[C]]
+    ]],
+    [pi, Arg1, [
+        [sigma,NewArg2, [
+            [pi, Arg3, [C]]
+        ]]
+    ]]
+):-
+    % \Pi_a \sigma_c E \Pi_{a} \sigma_c \Pi_{a\cup attr(c)} E
+    map_get(Arg1, 'attributes', AttrA),
+    map_get(Arg2, 'attributes', AttrC),
+    union([AttrA,AttrC], Attr),
+    necessarypi(C, Attr), !,
+    map_replace([Arg1, {'attributes': Attr}], Arg3),
+    map_replace([Arg2, {'attributes': Attr}], NewArg2).
+
+pushselectionrule(
+    [sigma, Arg1, [
+        [sigma,Arg2, [C]]
+    ]],
+    [sigma, FinalArg, [C]]
+):-
+    % \sigma_c \sigma_d E \sigma_{c && d}
+    map_match(Arg1, {"condition": Cond1, "conditionAttributes": CondAttr1}),
+    map_match(Arg2, {"condition": Cond2, "conditionAttributes": CondAttr2}),
+    concat(['(',Cond1,') && (',Cond2,')'],FinalCond),
+    union([CondAttr1, CondAttr2],FinalCondAttr),
+    !,
+    map_replace([Arg1, {"condition": FinalCond, "conditionAttributes": FinalCondAttr}], FinalArg).

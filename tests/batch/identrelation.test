@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<astral xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://astral.ligforge.imag.fr/schema/query.xsd">
+<query t0="auto">
+<window>
+<description wtype="B"/>
+<streamer stype="Rsu">
+<source attributes="T,v,PHYID" id="R" sourceAttributes="T,v,PHYID" type="Relation"/>
+</streamer>
+</window>
+</query>
+<sources>
+<source attributes="T,v,PHYID" file="tests/batch/R.R" id="R" impl="FileRelationImpl" type="Relation"/>
+</sources>
+</astral>
